@@ -1,6 +1,7 @@
 package com.team12.rally;
 
 import lejos.hardware.Button;
+import lejos.hardware.lcd.LCD;
 import lejos.hardware.motor.*;
 import lejos.hardware.port.Port;
 import lejos.hardware.sensor.BaseSensor;
@@ -55,6 +56,9 @@ public class Rally {
         samples = new float[sampleProviderRight.sampleSize()];
 
         calibrateThresholds();
+        System.out.println("Press DOWN to start");
+        while (!Button.DOWN.isDown()) ;
+        LCD.clearDisplay();
 
         motorLeft.forward();
         motorRight.forward();
@@ -67,36 +71,28 @@ public class Rally {
         boolean right = isOnLine(sampleProviderRight, colorThresholdRight);
         boolean left = isOnLine(sampleProviderleft, colorThresholdLeft);
 
-        if (right && left) {    // begge detekterer sort (override)
-            switch (state % 3 + 1) {
-                case 1:
-                    motorLeft.setSpeed(200);        // venstre
-                    break;
-                case 2:
-                    motorRight.setSpeed(200);        // høyre
-                    break;
-                case 3:
-                    motorLeft.setSpeed(200);        // venstre
-                    break;
-            }
+        if (right && left) { // Both sensors are over black
+            Thread.sleep(200); // drive forwards for *value* milliseconds
 //			System.out.println("begge");
-            state++;
         } else if (right) {    // Drive right
-            motorRight.setSpeed(200);        // snu i  200 millisekund
+            turnRight();
 //			System.out.println("venstre svart");
         } else if (left) {        // Drive left
-            motorLeft.setSpeed(200);        // snu i  200 millisekund
+            turnLeft();
 //			System.out.println("hoyre svart");
-        } else {                    // Kjør framover
-//			System.out.println("hvit");
-            return;
         }
-        Thread.sleep(200);
+    }
+
+    private void turnLeft() {
+        motorLeft.setSpeed(150);
+    }
+
+    private void turnRight() {
+        motorRight.setSpeed(150);
     }
 
     private boolean isOnLine(SampleProvider s, float colorThreshold) {
-        s.fetchSample(samples, 0);
-        return samples[0] * 100 > colorThreshold;
+        return getColor(s) < colorThreshold;
     }
 
     private float getColor(SampleProvider sampleProvider) {
@@ -106,20 +102,19 @@ public class Rally {
 
     private void calibrateThresholds() {
         System.out.println("Hold color-sensor over light color and press LEFT");
-        while (!Button.LEFT.isDown()) {
-        }
+        while (!Button.LEFT.isDown()) ; // Wait for left-press
 
         float lightLeft = getColor(sampleProviderRight);
         float lightRight = getColor(sampleProviderleft);
 
         System.out.println("Hold color-sensor over dark color and press RIGHT");
-        while (!Button.RIGHT.isDown()) {
-        }
+        while (!Button.RIGHT.isDown()) ; // Wait for right-press
 
         float darkLeft = getColor(sampleProviderRight);
         float darkRight = getColor(sampleProviderleft);
 
         colorThresholdRight = (lightLeft - darkLeft) / 2f + darkLeft;
         colorThresholdLeft = (lightRight - darkRight) / 2f + darkRight;
+        LCD.clearDisplay();
     }
 }
