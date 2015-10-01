@@ -36,14 +36,9 @@ public class Rally {
 
 		// Definerer sensorer:
 		Brick brick = BrickFinder.getDefault();
-		Port s1 = brick.getPort("S1"); // fargesensor 1 (h�yre)
-		Port s2 = brick.getPort("S2"); // fargesensor 2 (venstre)
 
-		EV3ColorSensor fargesensor1 = new EV3ColorSensor(s1); // EV3-fargesensor
-		NXTColorSensor fargesensor2 = new NXTColorSensor(s2); // NXT-fargesensor
-
-		sampleProviderLeft = fargesensor1.getMode("RGB");  // svart = 0.01..
-		sampleProviderRight = fargesensor2.getMode("RGB");  // svart = 0.01..
+		sampleProviderLeft = new EV3ColorSensor(brick.getPort("S1")).getMode("RGB");  // svart = 0.01..
+		sampleProviderRight = new NXTColorSensor(brick.getPort("S2")).getMode("RGB");  // svart = 0.01..
 
 		samples = new float[sampleProviderLeft.sampleSize()];
 
@@ -60,6 +55,7 @@ public class Rally {
 
 		float darkLeft = getColor(sampleProviderLeft);
 		float darkRight = getColor(sampleProviderRight);
+		
 		colorThresholdLeft = (lightLeft - darkLeft) / 2f + darkLeft;
 		colorThresholdRight = (lightRight - darkRight) / 2f + darkRight;
 
