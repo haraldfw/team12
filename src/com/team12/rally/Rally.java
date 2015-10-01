@@ -114,10 +114,10 @@ public class Rally {
 	}
 
 	public static void main (String[] arg) throws Exception  {
-		boolean fortsett = true;
+		Rally car = new Rally();
 
-		while (fortsett){ 	// Fortsett s� lenge roboten ikke treffer noe
-
+		while (!Button.ENTER.isDown()){ // Fortsett så lenge roboten ikke treffer noe
+			car.update();
 		}
 	}
 }
