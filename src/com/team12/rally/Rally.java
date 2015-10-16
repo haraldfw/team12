@@ -13,14 +13,6 @@ import lejos.robotics.SampleProvider;
 
 import java.util.ArrayList;
 
-/* FolgLinje.java  GS - 2012-01-20
-
- * Program som gj�r at en enkel robot f�lger en sort linje
- * Du trenger en enkel robot som kan svinge
- * en lyssensor koblet til sensor 1 - pekende nedover
- * en trykksensor koblet til sensor 2 - pekende rett fram i g� retningen
- */
-
 public class Rally {
 
     SampleProvider sampleProviderRight;
@@ -34,7 +26,12 @@ public class Rally {
     NXTRegulatedMotor motorRight = Motor.B;
     NXTRegulatedMotor motorLeft = Motor.C;
 
-    int state = 0;
+    private enum State {
+        LEFT,
+        RIGHT
+    }
+
+    private State state = State.LEFT;
 
     public Rally(ArrayList<BaseSensor> closables) {
         {
@@ -56,23 +53,25 @@ public class Rally {
         samples = new float[sampleProviderRight.sampleSize()];
 
         calibrateThresholds();
+
         System.out.println("Press DOWN to start");
         while (!Button.DOWN.isDown()) ;
-        LCD.clearDisplay();
+        LCD.clear();
 
+        motorRight.setSpeed(400);
+        motorLeft.setSpeed(400);
         motorLeft.forward();
         motorRight.forward();
     }
 
     public void update() throws InterruptedException {
-        motorRight.setSpeed(400);
-        motorLeft.setSpeed(400);
-
         boolean right = isOnLine(sampleProviderRight, colorThresholdRight);
         boolean left = isOnLine(sampleProviderleft, colorThresholdLeft);
 
         if (right && left) { // Both sensors are over black
-            Thread.sleep(200); // drive forwards for *value* milliseconds
+            // continue to thread sleep
+            motorRight.setSpeed(400);
+            motorLeft.setSpeed(400);
 //			System.out.println("begge");
         } else if (right) {    // Drive right
             turnRight();
@@ -80,15 +79,30 @@ public class Rally {
         } else if (left) {        // Drive left
             turnLeft();
 //			System.out.println("hoyre svart");
+        } else {
+            switch (state) {
+                case LEFT:
+                    turnLeft();
+                    break;
+                case RIGHT:
+                    turnRight();
+                    break;
+            }
+            return;
         }
+        Thread.sleep(200);
     }
 
     private void turnLeft() {
-        motorLeft.setSpeed(150);
+        state = State.LEFT;
+        motorRight.setSpeed(400);
+        motorLeft.setSpeed(200);
     }
 
     private void turnRight() {
-        motorRight.setSpeed(150);
+        state = State.RIGHT;
+        motorRight.setSpeed(200);
+        motorLeft.setSpeed(400);
     }
 
     private boolean isOnLine(SampleProvider s, float colorThreshold) {
@@ -115,6 +129,6 @@ public class Rally {
 
         colorThresholdRight = (lightLeft - darkLeft) / 2f + darkLeft;
         colorThresholdLeft = (lightRight - darkRight) / 2f + darkRight;
-        LCD.clearDisplay();
+        LCD.clear();
     }
 }
